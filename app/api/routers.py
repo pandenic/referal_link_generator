@@ -7,14 +7,15 @@ user_router: for /auth and /user endpoints
 """
 from fastapi import APIRouter
 
-from app.api.endpoints import user_router, referal_router
+from app.api.endpoints import user_router, referral_router
 
 main_router = APIRouter()
 
 main_router.include_router(user_router)
 main_router.include_router(
-    referal_router,
+    referral_router,
     prefix='/referral',
     tags=['Referral links'],
 )
+
 

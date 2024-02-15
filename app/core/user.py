@@ -2,7 +2,8 @@ from typing import Union, Optional
 from uuid import UUID
 
 from fastapi import Depends, Request
-from fastapi_users import UUIDIDMixin, BaseUserManager, InvalidPasswordException, FastAPIUsers
+from fastapi_users import UUIDIDMixin, BaseUserManager, InvalidPasswordException, FastAPIUsers, schemas, models, \
+    exceptions
 from fastapi_users.authentication import BearerTransport, JWTStrategy, AuthenticationBackend
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_async_session
 from app.models import User
-from app.schemas import UserCreate
+from app.schemas import UserCreate, ReferrerIdUserCreate
+from app.validators import check_referral_code_exists_and_actual
 
 
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
@@ -34,6 +36,27 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     reset_password_token_secret = settings.secret
     verification_token_secret = settings.secret
 
+    async def create(
+        self,
+        user_create: schemas.UC,
+        safe: bool = False,
+        request: Optional[Request] = None,
+    ) -> models.UP:
+        referral_code = user_create.__dict__.get('referral_code')
+        if referral_code:
+            code_obj = await check_referral_code_exists_and_actual(
+                referral_code,
+                self.user_db.session,
+            )
+            create_dict = user_create.dict()
+            if not create_dict.get('referral_code'):
+                raise ValueError('Wrong user pydantic schema.')
+            create_dict.pop('referral_code')
+            create_dict['referrer_id'] = code_obj.referrer_id
+            user_create = ReferrerIdUserCreate(**create_dict)
+
+        return await super().create(user_create, safe, request)
+
     async def validate_password(
         self,
         password: str,
@@ -49,6 +72,7 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
             )
 
     async def on_after_register(self, user: User, request: Optional[Request] = None):
+
         print(f"User {user.id} has registered.")
 
 

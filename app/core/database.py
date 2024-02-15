@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+from httpx_oauth.clients.google import GoogleOAuth2
 from sqlalchemy import Column, UUID
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declared_attr, declarative_base
@@ -19,8 +20,6 @@ class PreBase:
     def __tablename__(cls):
         """Bind table name to the class name."""
         return cls.__name__.lower()
-
-    id = Column(UUID, primary_key=True)
 
 
 Base = declarative_base(cls=PreBase)

@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from pydantic import EmailStr
@@ -16,6 +17,11 @@ class Settings(BaseSettings):
     first_superuser_password: Optional[str] = None
 
     referral_link_length: int = 16
+
+    mail_host: Optional[str] = None
+    mail_username: Optional[EmailStr] = None
+    mail_password: Optional[str] = None
+    mail_port: Optional[str] = None
 
     class Config:
         """
