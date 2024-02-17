@@ -1,3 +1,4 @@
+import pickle
 from http import HTTPStatus
 from typing import List
 from uuid import UUID
@@ -6,6 +7,7 @@ from fastapi import APIRouter, Depends, Response, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 
+from app.core.redis import redis_client
 from app.validators import check_referral_code_exists
 from app.core.database import get_async_session
 from app.core.user import current_user
@@ -27,21 +29,22 @@ async def create_referral_code(
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_user),
 ) -> ReferralCode:
-
     code_obj = await crud_referral.get_by_user(
         user, session
     )
     if code_obj:
-        return await crud_referral.update(
+        code_obj = await crud_referral.update(
             code_obj,
             referral_code_lifetime.lifetime,
             session,
         )
-    return await crud_referral.create(
-        user,
-        referral_code_lifetime.lifetime,
-        session,
-    )
+    else:
+        code_obj = await crud_referral.create(
+            user,
+            referral_code_lifetime.lifetime,
+            session,
+        )
+    return code_obj
 
 
 @router.delete(

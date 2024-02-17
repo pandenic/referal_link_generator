@@ -1,17 +1,32 @@
 import os
 from typing import Optional
 
-from pydantic import EmailStr
-from pydantic_settings import BaseSettings
+from pydantic import EmailStr, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
-    path: str
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     app_title: str = 'Referral link creator'
     secret: str = 'SECRET'
 
-    db_url: str = 'postgresql+asyncpg://postgres:postgres@localhost:5432/db'
+    db_name: str
+    db_username: str
+    db_password: SecretStr
+    db_host: str
+    db_port: int
+
+    redis_name: str
+    redis_username: str
+    redis_password: SecretStr
+    redis_host: str
+    redis_port: int
 
     first_superuser_email: Optional[EmailStr] = None
     first_superuser_password: Optional[str] = None
@@ -23,15 +38,29 @@ class Settings(BaseSettings):
     mail_password: Optional[str] = None
     mail_port: Optional[str] = None
 
-    class Config:
-        """
-        Configure parameters in settings.
+    @property
+    def postgres_connection_url(self) -> URL:
+        return URL.create(
+            drivername="postgresql+asyncpg",
+            username=self.db_username,
+            password=self.db_password.get_secret_value(),
+            host=self.db_host,
+            port=self.db_port,
+            database=self.db_name,
+        )
 
-        env_file: a path to an env file
-        """
-
-        env_file = '.env'
-        extra = 'allow'
+    @property
+    def redis_connection_url(self) -> URL:
+        return URL.create(
+            drivername="redis",
+            password=self.redis_password.get_secret_value(),
+            host=self.redis_host,
+            port=self.redis_port,
+            database=self.redis_name,
+            query={
+                "socket_keepalive": "True",
+            }
+        )
 
 
 settings = Settings()

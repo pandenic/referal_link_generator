@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 from typing import TypeVar, Type, Optional
 from uuid import UUID
@@ -6,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import Base
+from app.core.redis import redis_client
 from app.models import User, ReferralCode
 from app.services.referral import generate_referral_code, calculate_end_date
 
@@ -17,29 +19,56 @@ class CRUDReferral():
     def __init__(self, model: Type[ModelType]):
         self.model = model
 
+    async def get_redis_by_field(
+            self,
+            session: AsyncSession,
+            model_field,
+            value,
+    ):
+        if referral_code := await redis_client.get(
+                f'referral_code_{value}',
+        ):
+            db_obj = pickle.loads(referral_code)
+        else:
+            db_obj = await session.execute(
+                select(self.model).where(
+                    model_field == value,
+                )
+            )
+            db_obj = db_obj.scalars().first()
+            await redis_client.set(
+                f'referral_id_{value}',
+                pickle.dumps(db_obj),
+            )
+        return db_obj
+
     async def get_by_user(
             self,
             user: User,
             session: AsyncSession,
     ) -> Optional[ModelType]:
-        db_obj = await session.execute(
-            select(self.model).where(
-                self.model.referrer_id == user.id,
-            )
+        return await self.get_redis_by_field(
+            session,
+            self.model.referrer_id,
+            user.id
         )
-        return db_obj.scalars().first()
 
     async def get_by_referral_code(
             self,
             code: str,
             session: AsyncSession,
     ) -> Optional[ModelType]:
-        db_obj = await session.execute(
+        '''db_obj = await session.execute(
             select(self.model).where(
                 self.model.code == code,
             )
         )
-        return db_obj.scalars().first()
+        return db_obj.scalars().first()'''
+        return await self.get_redis_by_field(
+            session,
+            self.model.code,
+            code,
+        )
 
     async def update(
             self,

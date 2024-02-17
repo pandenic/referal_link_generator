@@ -1,7 +1,5 @@
 from typing import AsyncGenerator
 
-from httpx_oauth.clients.google import GoogleOAuth2
-from sqlalchemy import Column, UUID
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import declared_attr, declarative_base
 
@@ -24,7 +22,7 @@ class PreBase:
 
 Base = declarative_base(cls=PreBase)
 
-engine = create_async_engine(settings.db_url)
+engine = create_async_engine(settings.postgres_connection_url)
 
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession)
 

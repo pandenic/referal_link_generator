@@ -8,7 +8,6 @@ from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from app.core.database import Base
 
-
 class ReferralCode(Base):
     referrer_id: Mapped[UUID] = mapped_column(
         ForeignKey('user.id'),
