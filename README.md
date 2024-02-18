@@ -43,6 +43,7 @@ docker compose up -d
 
 ### Postman collection at `infra/Referral Generator.postman_collection.json`
 - Рекомендуется запускать в порядку перечисления эндпоинтов.
+- Для тестирования отправки на почту используется бесплатный почтовый сервер: https://ethereal.email/
 
 ### Получение токена /auth/jwt/login
 
@@ -166,6 +167,7 @@ docker compose up -d
 
 ### Postman collection at `infra/Referral Generator.postman_collection.json`.
 - It is recommended to run in order of endpoints.
+- A free post service is used for mail tasting: https://ethereal.email/
 
 ### Receive token /auth/jwt/login
 
