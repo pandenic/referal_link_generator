@@ -5,6 +5,7 @@ Create async context managers for an async session and a user.
 create_user: create a user in DB using context mangers and given data
 create_first_superuser: create superuser using data given in settings.
 """
+
 import contextlib
 
 from fastapi_users.exceptions import UserAlreadyExists
@@ -18,12 +19,8 @@ from app.schemas import UserCreate
 get_async_session_context = contextlib.asynccontextmanager(
     get_async_session,
 )
-get_user_db_context = contextlib.asynccontextmanager(
-    get_user_db
-)
-get_user_manager_context = contextlib.asynccontextmanager(
-    get_user_manager
-)
+get_user_db_context = contextlib.asynccontextmanager(get_user_db)
+get_user_manager_context = contextlib.asynccontextmanager(get_user_manager)
 
 
 async def create_user(

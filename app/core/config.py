@@ -1,4 +1,4 @@
-import os
+"""Settings for a FastAPI app."""
 from typing import Optional
 
 from pydantic import EmailStr, SecretStr
@@ -7,14 +7,16 @@ from sqlalchemy import URL
 
 
 class Settings(BaseSettings):
+    """FastAPI settings."""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
 
-    app_title: str = 'Referral link creator'
-    secret: str = 'SECRET'
+    app_title: str = "Referral link creator"
+    secret: str = "SECRET"
 
     db_name: str
     db_username: str
@@ -40,6 +42,7 @@ class Settings(BaseSettings):
 
     @property
     def postgres_connection_url(self) -> URL:
+        """Return URL for connections establishing to postgres."""
         return URL.create(
             drivername="postgresql+asyncpg",
             username=self.db_username,
@@ -51,6 +54,7 @@ class Settings(BaseSettings):
 
     @property
     def redis_connection_url(self) -> URL:
+        """Return URL for connections establishing to redis."""
         return URL.create(
             drivername="redis",
             password=self.redis_password.get_secret_value(),
@@ -59,7 +63,7 @@ class Settings(BaseSettings):
             database=self.redis_name,
             query={
                 "socket_keepalive": "True",
-            }
+            },
         )
 
 

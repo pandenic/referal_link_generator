@@ -1,2 +1,3 @@
-from .referral import crud_referral
-from .user import crud_user
+"""crud/init."""
+from .referral import crud_referral  # noqa
+from .user import crud_user  # noqa

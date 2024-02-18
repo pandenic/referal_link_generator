@@ -3,6 +3,7 @@ Describe FastAPI app entry point actions.
 
 startup: called on strting of a project
 """
+
 from fastapi import FastAPI
 
 from app.api.routers import main_router
@@ -14,7 +15,7 @@ app = FastAPI(title=settings.app_title)
 app.include_router(main_router)
 
 
-@app.on_event('startup')
+@app.on_event("startup")
 async def startup():
     """Describe actions on startup of the app."""
     await create_first_superuser()

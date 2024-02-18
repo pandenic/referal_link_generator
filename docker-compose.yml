@@ -1,0 +1,71 @@
+version: "3.10"
+
+volumes:
+  postgres:
+  cache:
+
+services:
+  postgres:
+    image: postgres:alpine
+    restart: always
+    env_file: .env
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_PORT=${DB_PORT}
+      - POSTGRES_HOST=${DB_HOST}
+    ports:
+      - "${DB_PORT}:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    restart: always
+    env_file: .env
+    environment:
+      - REDIS_DB=${REDIS_NAME}
+      - REDIS_USER=${REDIS_USERNAME}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_HOST=${REDIS_HOST}
+    ports:
+      - '${REDIS_PORT}:6379'
+    command: redis-server
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: [ "CMD-SHELL", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  alembic:
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: infra/alembic.Dockerfile
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  fast_api:
+    restart: always
+    build:
+      context: ./
+      dockerfile: infra/fast_api.Dockerfile
+    env_file: .env
+    ports:
+      - "80:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
